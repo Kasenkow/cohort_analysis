@@ -623,8 +623,7 @@ fin_df %>%
         scale_fill_gradient2(midpoint = 100, low = "red", high = "green")+
         labs(title = "Age CA for channel # 5",
              y = "Cohort",
-             x = "Cohort age")+
-        theme(axis.text.x = element_text(angle = 90, hjust = 1))
+             x = "Cohort age")
 ```
 
 ![](cohorts_files/figure-html/age-1.png)<!-- -->
