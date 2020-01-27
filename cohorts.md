@@ -1,5 +1,5 @@
 ---
-title: <center> Marketing Channel Performance Evaluation with Cohort Analysis </center>
+title: "Marketing Channel Performance Evaluation with Cohort Analysis"
 author: "Anton Kasenkov"
 date: "09 01 2020"
 output:
@@ -21,7 +21,7 @@ knitr::opts_chunk$set(echo = TRUE,
                       warning = FALSE,
                       message = FALSE)
 Sys.setlocale(locale = "English")
-pacman::p_load(knitr, readr, dplyr, tidyr, lubridate, ggplot2)
+pacman::p_load(knitr, readr, dplyr, tidyr, forcats, lubridate, ggplot2)
 ```
 ## Introduction
 
@@ -67,49 +67,55 @@ ord_df <-
         mutate(date = date(buy_ts))
 
 # we can peek at our data frames:
-kable(head(costs_df), caption = "Costs", align = "c", format = 'markdown')
+kable(head(costs_df), caption = "Costs", align = "c")
 ```
 
 
 
-| source_id |     dt     | costs |
-|:---------:|:----------:|:-----:|
-|     1     | 2017-06-01 | 75.20 |
-|     1     | 2017-06-02 | 62.25 |
-|     1     | 2017-06-03 | 36.53 |
-|     1     | 2017-06-04 | 55.00 |
-|     1     | 2017-06-05 | 57.08 |
-|     1     | 2017-06-06 | 40.39 |
+Table: Costs
+
+ source_id        dt        costs 
+-----------  ------------  -------
+     1        2017-06-01    75.20 
+     1        2017-06-02    62.25 
+     1        2017-06-03    36.53 
+     1        2017-06-04    55.00 
+     1        2017-06-05    57.08 
+     1        2017-06-06    40.39 
 
 ```r
-kable(head(vis_df[1:5]), caption = "Visits", align = "c", format = 'markdown')
+kable(head(vis_df[1:5]), caption = "Visits", align = "c")
 ```
 
 
 
-|     uid      | device  |       end_ts        | source_id |      start_ts       |
-|:------------:|:-------:|:-------------------:|:---------:|:-------------------:|
-| 1.687926e+19 |  touch  | 2017-12-20 17:38:00 |     4     | 2017-12-20 17:20:00 |
-| 1.040604e+17 | desktop | 2018-02-19 17:21:00 |     2     | 2018-02-19 16:53:00 |
-| 7.459036e+18 |  touch  | 2017-07-01 01:54:00 |     5     | 2017-07-01 01:54:00 |
-| 1.617468e+19 | desktop | 2018-05-20 11:23:00 |     9     | 2018-05-20 10:59:00 |
-| 9.969695e+18 | desktop | 2017-12-27 14:06:00 |     3     | 2017-12-27 14:06:00 |
-| 1.600754e+19 | desktop | 2017-09-03 21:36:00 |     5     | 2017-09-03 21:35:00 |
+Table: Visits
+
+     uid         device           end_ts           source_id         start_ts       
+--------------  ---------  ---------------------  -----------  ---------------------
+ 1.687926e+19     touch     2017-12-20 17:38:00        4        2017-12-20 17:20:00 
+ 1.040604e+17    desktop    2018-02-19 17:21:00        2        2018-02-19 16:53:00 
+ 7.459036e+18     touch     2017-07-01 01:54:00        5        2017-07-01 01:54:00 
+ 1.617468e+19    desktop    2018-05-20 11:23:00        9        2018-05-20 10:59:00 
+ 9.969695e+18    desktop    2017-12-27 14:06:00        3        2017-12-27 14:06:00 
+ 1.600754e+19    desktop    2017-09-03 21:36:00        5        2017-09-03 21:35:00 
 
 ```r
-kable(head(ord_df), caption = "Orders", align = "c", format = 'markdown')
+kable(head(ord_df), caption = "Orders", align = "c")
 ```
 
 
 
-|       buy_ts        | revenue |     uid      |    date    |
-|:-------------------:|:-------:|:------------:|:----------:|
-| 2017-06-01 00:10:00 |  17.00  | 1.032930e+19 | 2017-06-01 |
-| 2017-06-01 00:25:00 |  0.55   | 1.162726e+19 | 2017-06-01 |
-| 2017-06-01 00:27:00 |  0.37   | 1.790368e+19 | 2017-06-01 |
-| 2017-06-01 00:29:00 |  0.55   | 1.610924e+19 | 2017-06-01 |
-| 2017-06-01 07:58:00 |  0.37   | 1.420061e+19 | 2017-06-01 |
-| 2017-06-01 08:43:00 |  0.18   | 1.040239e+19 | 2017-06-01 |
+Table: Orders
+
+       buy_ts           revenue        uid            date    
+---------------------  ---------  --------------  ------------
+ 2017-06-01 00:10:00     17.00     1.032930e+19    2017-06-01 
+ 2017-06-01 00:25:00     0.55      1.162726e+19    2017-06-01 
+ 2017-06-01 00:27:00     0.37      1.790368e+19    2017-06-01 
+ 2017-06-01 00:29:00     0.55      1.610924e+19    2017-06-01 
+ 2017-06-01 07:58:00     0.37      1.420061e+19    2017-06-01 
+ 2017-06-01 08:43:00     0.18      1.040239e+19    2017-06-01 
 
 There are no missing values in the datasets. But there are a few mistakes. For instance, some visiting records have date-times with the end happening earlier than the start of the session:
 
@@ -118,12 +124,12 @@ There are no missing values in the datasets. But there are a few mistakes. For i
 vis_df %>%
         filter(end_ts < start_ts) %>%
         select(uid, ends_with("_ts")) %>%
-        kable(caption = "Wrong visiting sessions", align = "c")
+        kable(caption = "Wrong records", align = "c")
 ```
 
 
 
-Table: Wrong visiting sessions
+Table: Wrong records
 
      uid               end_ts                start_ts       
 --------------  ---------------------  ---------------------
@@ -551,7 +557,7 @@ fin_df <-
         mutate(age = interval(cohort_id, month) %/% months(1),
                LTV = revenue / size,
                ROI = revenue / costs * 100) %>%
-        mutate_at(c("cohort_id", "age", "month"), ~factor(.))
+        mutate_at(c("cohort_id", "age", "month"), ~ordered(.))
 
 kable(head(fin_df), caption = "Final dataset", align = "c")
 ```
@@ -589,7 +595,7 @@ fin_df %>%
         filter(source_id == 5) %>%
         group_by(cohort_id) %>%
         mutate_at("LTV", ~cumsum(.)) %>% 
-        ggplot(aes(x = month, y = cohort_id, fill = LTV)) +
+        ggplot(aes(x = month, y = fct_rev(cohort_id), fill = LTV)) +
         geom_tile(color = "white")+
         geom_text(aes(label = round(LTV, 1)), color = "black") +
         scale_fill_gradient2(midpoint = thrshld_5, low = "red", high = "green")+
@@ -611,7 +617,7 @@ fin_df %>%
         filter(source_id == 5) %>%
         group_by(cohort_id) %>%
         mutate_at("ROI", ~cumsum(.)) %>% 
-        ggplot(aes(x = age, y = cohort_id, fill = ROI)) +
+        ggplot(aes(x = age, y = fct_rev(cohort_id), fill = ROI)) +
         geom_tile(color = "white")+
         geom_text(aes(label = round(ROI, 1)), color = "black") +
         scale_fill_gradient2(midpoint = 100, low = "red", high = "green")+

@@ -355,7 +355,7 @@ fin_df %>%
         filter(source_id == 5) %>%
         group_by(cohort_id) %>%
         mutate_at("LTV", ~cumsum(.)) %>% 
-        ggplot(aes(x = month, y = cohort_id, fill = LTV)) +
+        ggplot(aes(x = month, y = fct_rev(cohort_id), fill = LTV)) +
         geom_tile(color = "white")+
         geom_text(aes(label = round(LTV, 1)), color = "black") +
         scale_fill_gradient2(midpoint = thrshld_5, low = "red", high = "green")+
