@@ -1,5 +1,5 @@
 ---
-title: <center> Marketing Channel Performance Evaluation with Cohort Analysis </center>
+title: "Marketing Channel Performance Evaluation with Cohort Analysis"
 author: "Anton Kasenkov"
 date: "09 01 2020"
 output:
@@ -20,7 +20,7 @@ knitr::opts_chunk$set(echo = TRUE,
                       warning = FALSE,
                       message = FALSE)
 Sys.setlocale(locale = "English")
-pacman::p_load(knitr, readr, dplyr, tidyr, lubridate, ggplot2)
+pacman::p_load(knitr, readr, dplyr, tidyr, forcats, lubridate, ggplot2)
 ```
 ## Introduction
 
@@ -76,7 +76,7 @@ There are no missing values in the datasets. But there are a few mistakes. For i
 vis_df %>%
         filter(end_ts < start_ts) %>%
         select(uid, ends_with("_ts")) %>%
-        kable(caption = "Wrong visiting sessions", align = "c")
+        kable(caption = "Wrong records", align = "c")
 ```
 
 We'll leave remove those records.
@@ -330,7 +330,7 @@ fin_df <-
         mutate(age = interval(cohort_id, month) %/% months(1),
                LTV = revenue / size,
                ROI = revenue / costs * 100) %>%
-        mutate_at(c("cohort_id", "age", "month"), ~factor(.))
+        mutate_at(c("cohort_id", "age", "month"), ~ordered(.))
 
 kable(head(fin_df), caption = "Final dataset", align = "c")
 ```
@@ -375,7 +375,7 @@ fin_df %>%
         filter(source_id == 5) %>%
         group_by(cohort_id) %>%
         mutate_at("ROI", ~cumsum(.)) %>% 
-        ggplot(aes(x = age, y = cohort_id, fill = ROI)) +
+        ggplot(aes(x = age, y = fct_rev(cohort_id), fill = ROI)) +
         geom_tile(color = "white")+
         geom_text(aes(label = round(ROI, 1)), color = "black") +
         scale_fill_gradient2(midpoint = 100, low = "red", high = "green")+
